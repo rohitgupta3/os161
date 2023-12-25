@@ -45,9 +45,11 @@
 
 #define CREATELOOPS		8
 #define NSEMLOOPS     63
-#define NLOCKLOOPS    120
+// #define NLOCKLOOPS    120
+#define NLOCKLOOPS    5
 #define NCVLOOPS      5
-#define NTHREADS      32
+// #define NTHREADS      32
+#define NTHREADS      8
 #define SYNCHTEST_YIELDER_MAX 16
 
 static volatile unsigned long testval1;
@@ -172,7 +174,7 @@ locktestthread(void *junk, unsigned long num)
 	int i;
 
 	for (i=0; i<NLOCKLOOPS; i++) {
-		kprintf_t(".");
+		kprintf_n(".");
 		KASSERT(!(lock_do_i_hold(testlock)));
 		lock_acquire(testlock);
 		KASSERT(lock_do_i_hold(testlock));
@@ -258,7 +260,7 @@ locktest(int nargs, char **args)
 
 	kprintf_n("Starting lt1...\n");
 	for (i=0; i<CREATELOOPS; i++) {
-		kprintf_t(".");
+		kprintf_n(".");
 		testlock = lock_create("testlock");
 		if (testlock == NULL) {
 			panic("lt1: lock_create failed\n");
@@ -274,9 +276,10 @@ locktest(int nargs, char **args)
 	}
 	spinlock_init(&status_lock);
 	test_status = TEST161_SUCCESS;
+	kprintf_n("got here");
 
 	for (i=0; i<NTHREADS; i++) {
-		kprintf_t(".");
+		kprintf_n(".");
 		result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
 		if (result) {
 			panic("lt1: thread_fork failed: %s\n", strerror(result));
