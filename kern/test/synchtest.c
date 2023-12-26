@@ -233,6 +233,7 @@ locktestthread(void *junk, unsigned long num)
 		kprintf_n("%lu done ltt loop %d with testval3=%lu\n", num, i, testval3);
 	}
 
+	kprintf_n("%lu after first ltt loops\n", num);
 	/* Check for solutions that don't track ownership properly */
 
 	for (i=0; i<NLOCKLOOPS; i++) {
@@ -242,12 +243,18 @@ locktestthread(void *junk, unsigned long num)
 		}
 	}
 
+	kprintf_n("%lu after second ltt loops\n", num);
+
 	V(donesem);
+
+	kprintf_n("%lu after incrementing done semaphore\n", num);
 	return;
 
 fail:
+	kprintf_n("%lu in fail\n", num);
 	lock_release(testlock);
 fail2:
+	kprintf_n("%lu in fail2\n", num);
 	failif(true);
 	V(donesem);
 	return;
@@ -285,12 +292,13 @@ locktest(int nargs, char **args)
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_n("About to threadfork thread %d\n", i);
 		result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
-		kprintf_n("Just threadfork'd thread %d\n", i);
+		// kprintf_n("Just threadfork'd thread %d\n", i);
 		if (result) {
 			panic("lt1: thread_fork failed: %s\n", strerror(result));
 		}
+		kprintf_n("Bottom of threadforking loop\n");
 	}
-	kprintf_n("Done with threadfork'ing loop\n");
+	// kprintf_n("Done with threadfork'ing loop\n");
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
 		P(donesem);
