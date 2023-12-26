@@ -158,6 +158,7 @@ lock_create(const char *name)
 
 	// add stuff here as needed
 	lock->lock_holder = NULL;
+	spinlock_init(&lock->splk);
 
 	return lock;
 }
@@ -181,7 +182,9 @@ lock_acquire(struct lock *lock)
 	// atomically here. Not sure how, though
 
 	/* Call this (atomically) before waiting for a lock */
+	spinlock_acquire(&lock->splk);
 	HANGMAN_WAIT(&curthread->t_hangman, &lock->lk_hangman);
+	spinlock_release(&lock->splk);
 
 	// Write this
 
@@ -192,7 +195,9 @@ lock_acquire(struct lock *lock)
 	lock->lock_holder = curthread;
 
 	/* Call this (atomically) once the lock is acquired */
+	spinlock_acquire(&lock->splk);
 	HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
+	spinlock_release(&lock->splk);
 }
 
 void
@@ -201,7 +206,9 @@ lock_release(struct lock *lock)
 	// TODO: there is much discussion of doing things
 	// atomically here. Not sure how, though
 	/* Call this (atomically) when the lock is released */
+	spinlock_acquire(&lock->splk);
 	HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
+	spinlock_release(&lock->splk);
 
 	// Write this
 	lock->lock_holder = NULL;

@@ -79,7 +79,7 @@ struct lock {
         // add what you need here
         // (don't forget to mark things volatile as needed)
         volatile struct thread *lock_holder; /* thread holding the lock */
-	// struct spinlock splk;
+	struct spinlock splk;
 };
 
 struct lock *lock_create(const char *name);
