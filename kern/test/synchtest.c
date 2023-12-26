@@ -173,10 +173,10 @@ locktestthread(void *junk, unsigned long num)
 
 	int i;
 
-	kprintf_n("%lu in locktestthread\n", num);
+	kprintf_n("%lu in ltt\n", num);
 
 	for (i=0; i<NLOCKLOOPS; i++) {
-		kprintf_n("%lu in locktestthread loop %d\n", num, i);
+		kprintf_n("%lu in ltt loop %d\n", num, i);
 		KASSERT(!(lock_do_i_hold(testlock)));
 		lock_acquire(testlock);
 		KASSERT(lock_do_i_hold(testlock));
@@ -230,7 +230,7 @@ locktestthread(void *junk, unsigned long num)
 
 		lock_release(testlock);
 		KASSERT(!(lock_do_i_hold(testlock)));
-		kprintf_n("%lu done locktestthread loop %d with testval3=%lu\n", num, i, testval3);
+		kprintf_n("%lu done ltt loop %d with testval3=%lu\n", num, i, testval3);
 	}
 
 	/* Check for solutions that don't track ownership properly */
@@ -280,18 +280,22 @@ locktest(int nargs, char **args)
 	spinlock_init(&status_lock);
 	test_status = TEST161_SUCCESS;
 	kprintf_n("got here");
+	DEBUG(DB_THREADS, "Test");
 
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_n("About to threadfork thread %d\n", i);
 		result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
+		kprintf_n("Just threadfork'd thread %d\n", i);
 		if (result) {
 			panic("lt1: thread_fork failed: %s\n", strerror(result));
 		}
 	}
+	kprintf_n("Done with threadfork'ing loop\n");
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
 		P(donesem);
 	}
+	kprintf_n("Almost done");
 
 	lock_destroy(testlock);
 	sem_destroy(donesem);
