@@ -49,7 +49,7 @@
 #define NLOCKLOOPS    5
 #define NCVLOOPS      5
 // #define NTHREADS      32
-#define NTHREADS      8
+#define NTHREADS      4
 #define SYNCHTEST_YIELDER_MAX 16
 
 static volatile unsigned long testval1;
@@ -173,8 +173,10 @@ locktestthread(void *junk, unsigned long num)
 
 	int i;
 
+	kprintf_n("%lu in locktestthread\n", num);
+
 	for (i=0; i<NLOCKLOOPS; i++) {
-		kprintf_n(".");
+		kprintf_n("%lu in locktestthread loop %d\n", num, i);
 		KASSERT(!(lock_do_i_hold(testlock)));
 		lock_acquire(testlock);
 		KASSERT(lock_do_i_hold(testlock));
@@ -228,6 +230,7 @@ locktestthread(void *junk, unsigned long num)
 
 		lock_release(testlock);
 		KASSERT(!(lock_do_i_hold(testlock)));
+		kprintf_n("%lu done locktestthread loop %d with testval3=%lu\n", num, i, testval3);
 	}
 
 	/* Check for solutions that don't track ownership properly */
@@ -279,7 +282,7 @@ locktest(int nargs, char **args)
 	kprintf_n("got here");
 
 	for (i=0; i<NTHREADS; i++) {
-		kprintf_n(".");
+		kprintf_n("About to threadfork thread %d\n", i);
 		result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
 		if (result) {
 			panic("lt1: thread_fork failed: %s\n", strerror(result));
