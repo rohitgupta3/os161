@@ -286,24 +286,24 @@ locktest(int nargs, char **args)
 	}
 	spinlock_init(&status_lock);
 	test_status = TEST161_SUCCESS;
-	kprintf_n("got here");
+	kprintf_n("got here\n");
 	DEBUG(DB_THREADS, "Test");
 
 	for (i=0; i<NTHREADS; i++) {
-		kprintf_n("About to threadfork thread %d\n", i);
+		kprintf_n("About to invoke thread_fork, iter %d\n", i);
 		result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
 		// kprintf_n("Just threadfork'd thread %d\n", i);
 		if (result) {
 			panic("lt1: thread_fork failed: %s\n", strerror(result));
 		}
-		kprintf_n("Bottom of threadforking loop\n");
+		// kprintf_n("Bottom of threadforking loop\n");
 	}
 	// kprintf_n("Done with threadfork'ing loop\n");
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
 		P(donesem);
 	}
-	kprintf_n("Almost done");
+	// kprintf_n("Almost done");
 
 	lock_destroy(testlock);
 	sem_destroy(donesem);
