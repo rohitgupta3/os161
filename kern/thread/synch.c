@@ -176,6 +176,9 @@ void
 lock_destroy(struct lock *lock)
 {
 	KASSERT(lock != NULL);
+	if (lock->lock_holder != NULL) {
+		panic("Nothing should be holding lock in `lock_destroy`");
+	}
 
 	// add stuff here as needed
 	/* wchan_cleanup will assert if anyone's waiting on it */
@@ -240,6 +243,10 @@ lock_release(struct lock *lock)
 
 	// Write this
 	KASSERT(lock != NULL);
+
+	if (!(lock->is_locked && lock->lock_holder == curthread)) {
+		panic("Only thread holding lock can invoke `lock_release`");
+	}
 
 	spinlock_acquire(&lock->lock_spinlock);
 
