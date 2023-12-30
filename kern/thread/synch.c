@@ -166,6 +166,7 @@ lock_create(const char *name)
 
 	spinlock_init(&lock->lock_spinlock);
 	lock->is_locked = false;
+	lock->lock_holder = NULL; // TODO: feels weird
 	// added above
 
 	return lock;
@@ -177,7 +178,12 @@ lock_destroy(struct lock *lock)
 	KASSERT(lock != NULL);
 
 	// add stuff here as needed
-	// TODO: do this
+	/* wchan_cleanup will assert if anyone's waiting on it */
+	spinlock_cleanup(&lock->lock_spinlock);
+	wchan_destroy(lock->lock_wchan);
+	// TODO: feels weird, plus shouldn't it already be NULL?
+	lock->lock_holder = NULL; 
+	// added above
 
 	kfree(lock->lk_name);
 	kfree(lock);
@@ -202,7 +208,8 @@ lock_acquire(struct lock *lock)
 
 	/* Use the lock's spinlock to protect the wchan as well. */
 	spinlock_acquire(&lock->lock_spinlock);
-	while (lock->islocked) {
+	HANGMAN_WAIT(&curthread->t_hangman, &lock->lk_hangman);
+	while (lock->is_locked) {
 		/*
 		 *
 		 * Note that we don't maintain strict FIFO ordering of
@@ -210,11 +217,13 @@ lock_acquire(struct lock *lock)
 		 * might "get" it on the first try even if other
 		 * threads are waiting.
 		 */
-		wchan_sleep(sem->sem_wchan, &sem->sem_lock);
+		wchan_sleep(lock->lock_wchan, &lock->lock_spinlock);
 	}
-	KASSERT(sem->sem_count > 0);
-	sem->sem_count--;
-	spinlock_release(&sem->sem_lock);
+	KASSERT(!(lock->is_locked));
+	lock->is_locked = true;
+	lock->lock_holder = curthread;
+	HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
+	spinlock_release(&lock->lock_spinlock);
 	// Above is written
 
 	// (void)lock;  // suppress warning until code gets written
@@ -230,8 +239,19 @@ lock_release(struct lock *lock)
 	//HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
 
 	// Write this
+	KASSERT(lock != NULL);
 
-	(void)lock;  // suppress warning until code gets written
+	spinlock_acquire(&lock->lock_spinlock);
+
+	lock->is_locked = false;
+	lock->lock_holder = NULL;
+	HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
+	wchan_wakeone(lock->lock_wchan, &lock->lock_spinlock);
+
+	spinlock_release(&lock->lock_spinlock);
+	// Above is written
+
+	// (void)lock;  // suppress warning until code gets written
 }
 
 bool
@@ -239,9 +259,10 @@ lock_do_i_hold(struct lock *lock)
 {
 	// Write this
 
-	(void)lock;  // suppress warning until code gets written
+	// (void)lock;  // suppress warning until code gets written
 
-	return true; // dummy until code gets written
+	// return true; // dummy until code gets written
+	return lock->is_locked && lock->lock_holder == curthread;
 }
 
 ////////////////////////////////////////////////////////////
