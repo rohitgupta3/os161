@@ -269,7 +269,9 @@ lock_do_i_hold(struct lock *lock)
 	// (void)lock;  // suppress warning until code gets written
 
 	// return true; // dummy until code gets written
+	spinlock_acquire(&lock->lock_spinlock);
 	return lock->is_locked && lock->lock_holder == curthread;
+	spinlock_release(&lock->lock_spinlock);
 }
 
 ////////////////////////////////////////////////////////////
