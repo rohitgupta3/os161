@@ -156,7 +156,6 @@ lock_create(const char *name)
 
 	HANGMAN_LOCKABLEINIT(&lock->lk_hangman, lock->lk_name);
 
-	// add stuff here as needed
 	lock->lock_wchan = wchan_create(lock->lk_name);
 	if (lock->lock_wchan == NULL) {
 		kfree(lock->lk_name);
@@ -167,7 +166,6 @@ lock_create(const char *name)
 	spinlock_init(&lock->lock_spinlock);
 	lock->is_locked = false;
 	lock->lock_holder = NULL; // TODO: feels weird
-	// added above
 
 	return lock;
 }
@@ -180,13 +178,11 @@ lock_destroy(struct lock *lock)
 		panic("Nothing should be holding lock in `lock_destroy`");
 	}
 
-	// add stuff here as needed
 	/* wchan_cleanup will assert if anyone's waiting on it */
 	spinlock_cleanup(&lock->lock_spinlock);
 	wchan_destroy(lock->lock_wchan);
 	// TODO: feels weird, plus shouldn't it already be NULL?
 	lock->lock_holder = NULL; 
-	// added above
 
 	kfree(lock->lk_name);
 	kfree(lock);
@@ -198,7 +194,6 @@ lock_acquire(struct lock *lock)
 	/* Call this (atomically) before waiting for a lock */
 	//HANGMAN_WAIT(&curthread->t_hangman, &lock->lk_hangman);
 
-	// Write this
 	KASSERT(lock != NULL);
 
 	/*
@@ -227,9 +222,6 @@ lock_acquire(struct lock *lock)
 	lock->lock_holder = curthread;
 	HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
 	spinlock_release(&lock->lock_spinlock);
-	// Above is written
-
-	// (void)lock;  // suppress warning until code gets written
 
 	/* Call this (atomically) once the lock is acquired */
 	//HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
@@ -241,7 +233,6 @@ lock_release(struct lock *lock)
 	/* Call this (atomically) when the lock is released */
 	//HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
 
-	// Write this
 	KASSERT(lock != NULL);
 
 	if (!(lock->is_locked && lock->lock_holder == curthread)) {
@@ -256,22 +247,19 @@ lock_release(struct lock *lock)
 	wchan_wakeone(lock->lock_wchan, &lock->lock_spinlock);
 
 	spinlock_release(&lock->lock_spinlock);
-	// Above is written
-
-	// (void)lock;  // suppress warning until code gets written
 }
 
+// TODO: originally did not acquire spinlock to look at internal
+// state, not sure if it's necessary
 bool
 lock_do_i_hold(struct lock *lock)
 {
-	// Write this
+	bool result;
 
-	// (void)lock;  // suppress warning until code gets written
-
-	// return true; // dummy until code gets written
 	spinlock_acquire(&lock->lock_spinlock);
-	return lock->is_locked && lock->lock_holder == curthread;
+	result = lock->is_locked && lock->lock_holder == curthread;
 	spinlock_release(&lock->lock_spinlock);
+	return result;
 }
 
 ////////////////////////////////////////////////////////////
