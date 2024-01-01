@@ -315,6 +315,11 @@ cv_wait(struct cv *cv, struct lock *lock)
 	KASSERT(lock != NULL);
 	KASSERT(lock_do_i_hold(lock));
 
+	/*
+	 * May not block in an interrupt handler.
+	 */
+	KASSERT(curthread->t_in_interrupt == false);
+
 	lock_release(lock);
 	spinlock_acquire(&cv->cv_spinlock);
 	wchan_sleep(cv->cv_wchan, &cv->cv_spinlock);
