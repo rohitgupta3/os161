@@ -320,8 +320,8 @@ cv_wait(struct cv *cv, struct lock *lock)
 	 */
 	KASSERT(curthread->t_in_interrupt == false);
 
-	lock_release(lock);
 	spinlock_acquire(&cv->cv_spinlock);
+	lock_release(lock);
 	wchan_sleep(cv->cv_wchan, &cv->cv_spinlock);
 	spinlock_release(&cv->cv_spinlock);
 	lock_acquire(lock);
