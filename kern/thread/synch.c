@@ -316,6 +316,9 @@ cv_destroy(struct cv *cv)
  * I'm not sure if it's quite right, and also, the fact that I don't symmetrically
  * treat the spinlock and lock on the way out of the function feels off, but all
  * the tests pass.
+ * Note that if I do make it symmetric i.e. first `lock_acquire` then `spinlock_release`
+ * at the end of the function, cvt2 has the following output almost immediately:
+ * panic: Assertion failed: curcpu->c_spinlocks == 1, at ../../thread/thread.c:1042 (wchan_sleep)
 */
 void
 cv_wait(struct cv *cv, struct lock *lock)
