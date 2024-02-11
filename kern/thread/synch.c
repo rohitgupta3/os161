@@ -308,6 +308,15 @@ cv_destroy(struct cv *cv)
 	kfree(cv);
 }
 
+/*
+ * Used to have `lock_release` before `spinlock_acquire` but that meant
+ * that in cvt2, the wakethread could get in `cv_signal`, acquire the spinlock,
+ * and then `wchan_wakeone` which will be a no-op because sleepthread would not
+ * have gone to sleep on the wait channel yet. This order makes cvt2 pass, but
+ * I'm not sure if it's quite right, and also, the fact that I don't symmetrically
+ * treat the spinlock and lock on the way out of the function feels off, but all
+ * the tests pass.
+*/
 void
 cv_wait(struct cv *cv, struct lock *lock)
 {
