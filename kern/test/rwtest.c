@@ -109,7 +109,7 @@ rwtestthread_writer(void *junk, unsigned long num)
 
 	testval1 = num;
 
-	return; 
+	return;
 }
 
 int rwtest(int nargs, char **args) {
