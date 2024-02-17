@@ -176,7 +176,8 @@ fail:
 	rwlock_release_write(testlock);
 }
 
-int rwtest(int nargs, char **args) {
+int rwtest(int nargs, char **args)
+{
 	// copy of semtest
 	(void)nargs;
 	(void)args;
@@ -224,44 +225,10 @@ int rwtest(int nargs, char **args) {
 	success(test_status, SECRET, "rwt1");
 
 	return 0;
-
-// 	// copy of locktest
-// 	// int i, result;
-// 
-// 	// kprintf_n("Starting lt1...\n");
-// 	// for (i=0; i<CREATELOOPS; i++) {
-// 	// 	kprintf_t(".");
-// 	// 	testlock = lock_create("testlock");
-// 	// 	if (testlock == NULL) {
-// 	// 		panic("lt1: lock_create failed\n");
-// 	// 	}
-// 	// 	donesem = sem_create("donesem", 0);
-// 	// 	if (donesem == NULL) {
-// 	// 		panic("lt1: sem_create failed\n");
-// 	// 	}
-// 	// 	if (i != CREATELOOPS - 1) {
-// 	// 		lock_destroy(testlock);
-// 	// 		sem_destroy(donesem);
-// 	// 	}
-// 	// }
-// 	// spinlock_init(&status_lock);
-// 	// test_status = TEST161_SUCCESS;
-// 
-// 	// for (i=0; i<NTHREADS; i++) {
-// 	// 	kprintf_t(".");
-// 	// 	result = thread_fork("synchtest", NULL, locktestthread, NULL, i);
-// 	// 	if (result) {
-// 	// 		panic("lt1: thread_fork failed: %s\n", strerror(result));
-// 	// 	}
-// 	// }
-// 	// for (i=0; i<NTHREADS; i++) {
-// 	// 	kprintf_t(".");
-// 	// 	P(donesem);
-// 	// }
-// 
 }
 
-int rwtest2(int nargs, char **args) {
+int rwtest2(int nargs, char **args)
+{
 	(void)nargs;
 	(void)args;
 
@@ -271,7 +238,8 @@ int rwtest2(int nargs, char **args) {
 	return 0;
 }
 
-int rwtest3(int nargs, char **args) {
+int rwtest3(int nargs, char **args)
+{
 	(void)nargs;
 	(void)args;
 
@@ -281,7 +249,8 @@ int rwtest3(int nargs, char **args) {
 	return 0;
 }
 
-int rwtest4(int nargs, char **args) {
+int rwtest4(int nargs, char **args)
+{
 	(void)nargs;
 	(void)args;
 
@@ -291,7 +260,8 @@ int rwtest4(int nargs, char **args) {
 	return 0;
 }
 
-int rwtest5(int nargs, char **args) {
+int rwtest5(int nargs, char **args)
+{
 	(void)nargs;
 	(void)args;
 
