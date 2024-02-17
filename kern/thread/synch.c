@@ -386,9 +386,14 @@ rwlock_create(const char *name)
 	// TODO: do we need the below, that exists in `lock_create`?
 	// HANGMAN_LOCKABLEINIT(&rwlock->lk_hangman, rwlock->lk_name);
 
-	// TODO: deal with reader-writer-lock-specific stuff
-	rwlock->rwlock_wchan = wchan_create(rwlock->rwlock_name);
-	if (rwlock->rwlock_wchan == NULL) {
+	rwlock->rwlock_wchan_reader = wchan_create(rwlock->rwlock_name);
+	if (rwlock->rwlock_wchan_reader == NULL) {
+		kfree(rwlock->rwlock_name);
+		kfree(rwlock);
+		return NULL;
+	}
+	rwlock->rwlock_wchan_writer = wchan_create(rwlock->rwlock_name);
+	if (rwlock->rwlock_wchan_writer == NULL) {
 		kfree(rwlock->rwlock_name);
 		kfree(rwlock);
 		return NULL;
@@ -422,13 +427,72 @@ rwlock_destroy(struct rwlock *rwlock)
 void
 rwlock_acquire_read(struct rwlock *rwlock)
 {
-	(void)rwlock;  // suppress warning until code gets written
+	KASSERT(rwlock != NULL);
+
+	/*
+	 * May not block in an interrupt handler.
+	 *
+	 * For robustness, always check, even if we can actually
+	 * complete without blocking.
+	 */
+	KASSERT(curthread->t_in_interrupt == false);
+
+	/* Use the rwlock's spinlock to protect the wchan as well. */
+	spinlock_acquire(&rwlock->rwlock_spinlock);
+	// HANGMAN_WAIT(&curthread->t_hangman, &rwlock->lk_hangman);
+	while (rwlock->is_locked_writer) {
+		/*
+		 *
+		 * Note that we don't maintain strict FIFO ordering of
+		 * threads going through the lock; that is, we
+		 * might "get" it on the first try even if other
+		 * threads are waiting.
+		 */
+		wchan_sleep(rwlock->rwlock_wchan_reader, &rwlock->rwlock_spinlock);
+	}
+	KASSERT(!(rwlock->is_locked_writer));
+	KASSERT(rwlock->holder_count_reader >= 0);  // TODO: check this
+	rwlock->holder_count_reader += 1;
+	// HANGMAN_ACQUIRE(&curthread->t_hangman, &rwlock->lk_hangman);
+	spinlock_release(&rwlock->rwlock_spinlock);
 }
 
 void
 rwlock_release_read(struct rwlock *rwlock)
 {
-	(void)rwlock;  // suppress warning until code gets written
+	(void)rwlock; // TODO: remove
+	// // from `V`
+	// KASSERT(sem != NULL);
+
+	// spinlock_acquire(&sem->sem_lock);
+
+	// sem->sem_count++;
+	// KASSERT(sem->sem_count > 0);
+	// wchan_wakeone(sem->sem_wchan, &sem->sem_lock);
+
+	// spinlock_release(&sem->sem_lock);
+	// // end from `V`
+
+
+	// // from `lock_acquire`
+	// KASSERT(lock != NULL);
+
+	// if (!(lock->is_locked && lock->lock_holder == curthread)) {
+	// 	panic("Only thread holding lock can invoke `lock_release`");
+	// }
+
+	// spinlock_acquire(&lock->lock_spinlock);
+
+	// lock->is_locked = false;
+	// lock->lock_holder = NULL;
+	// HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
+	// wchan_wakeone(lock->lock_wchan, &lock->lock_spinlock);
+
+	// spinlock_release(&lock->lock_spinlock);
+	// // end from `lock_acquire`
+
+	// // actual implementation
+	// KASSERT(rwlock != NULL);
 }
 
 void

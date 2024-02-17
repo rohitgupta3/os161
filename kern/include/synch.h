@@ -160,10 +160,12 @@ struct rwlock {
         // add what you need here
         // (don't forget to mark things volatile as needed)
 
-        HANGMAN_LOCKABLE(lk_hangman);   /* Deadlock detector hook. */
+	// TODO: do we need to implement the deadlock detector?
+        // HANGMAN_LOCKABLE(lk_hangman);   /* Deadlock detector hook. */
         // add what you need here
         // (don't forget to mark things volatile as needed)
-	struct wchan *rwlock_wchan;
+	struct wchan *rwlock_wchan_reader;
+	struct wchan *rwlock_wchan_writer;
 	struct spinlock rwlock_spinlock;
 	volatile int holder_count_reader;  // TODO: is this type right?
 	volatile bool is_locked_writer;
