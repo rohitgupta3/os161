@@ -470,7 +470,7 @@ rwlock_release_read(struct rwlock *rwlock)
 
 	rwlock->holder_count_reader -= 1;
 	KASSERT(rwlock->holder_count_reader >= 0);  // TODO: necessary?
-	// TODO: do anything with deadlock detector like in `lock_acquire`?
+	// TODO: do anything with deadlock detector like in `lock_release`?
 	wchan_wakeone(rwlock->rwlock_wchan_writer, &rwlock->rwlock_spinlock);
 
 	spinlock_release(&rwlock->rwlock_spinlock);
@@ -514,5 +514,23 @@ rwlock_acquire_write(struct rwlock *rwlock)
 void
 rwlock_release_write(struct rwlock *rwlock)
 {
-	(void)rwlock;  // suppress warning until code gets written
+	KASSERT(rwlock != NULL);
+
+	// TODO: doing the below, but it's weird because I'm doing no such thing
+	// in `rwlock_release_read`. Check `lock_acquire` and `lock_release` for
+	// where this is all coming from
+	if (!(rwlock->is_locked_writer && rwlock->rwlock_holder_writer == curthread)) {
+		panic("Only writer thread holding rwlock can invoke `rwlock_release_writer`");
+	}
+
+	spinlock_acquire(&rwlock->rwlock_spinlock);
+
+	rwlock->is_locked_writer = false;
+	rwlock->rwlock_holder_writer = NULL;
+	// TODO: do we need to do anything with deadlock detector? Check `lock_release`
+	// TODO: is waking both wait channels the right thing?
+	wchan_wakeall(rwlock->rwlock_wchan_reader, &rwlock->rwlock_spinlock);
+	wchan_wakeone(rwlock->rwlock_wchan_writer, &rwlock->rwlock_spinlock);
+	
+	spinlock_release(&rwlock->rwlock_spinlock);
 }
