@@ -77,7 +77,6 @@ rwtestthread_reader(void *junk, unsigned long num)
 	return;
 
 fail:
-	V(donesem);
 	kprintf_n("fail");
 	rwlock_release_read(testlock);
 }
@@ -128,7 +127,6 @@ rwtestthread_writer(void *junk, unsigned long num)
 
 fail:
 	kprintf_n("fail");
-	V(donesem);
 	rwlock_release_write(testlock);
 }
 
