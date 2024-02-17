@@ -20,13 +20,23 @@
 #define NSEMLOOPS     63
 #define NTHREADS      32
 
-static struct semaphore *testsem = NULL;
+static volatile unsigned long testval1;
+
+// static struct semaphore *testsem = NULL;
+static struct rwlock *testlock = NULL;
 static struct semaphore *donesem = NULL;
 
 struct spinlock status_lock;
 static bool test_status = TEST161_FAIL;
 
-static unsigned long semtest_current;
+// static unsigned long semtest_current;
+
+// Declaration to avoid below error
+// test/rwtest.c:75:5: error: no previous prototype for 'rwtestthread_reader' [-Werror=missing-prototypes]
+// int rwtestthread_reader(void *junk, unsigned long num)
+// TODO: figure out whythis error comes up here but not for e.g. `locktestthread`?
+static void rwtestthread_reader(void *junk, unsigned long num);
+
 
 static
 bool
@@ -40,34 +50,49 @@ failif(bool condition) {
 }
 
 
+// static
+// void
+// // rwtestthread(void *junk, unsigned long num)
+// semtestthread(void *junk, unsigned long num)
+// {
+// 	// copy of semtestthread
+// 	(void)junk;
+// 
+// 	int i;
+// 
+// 	random_yielder(4);
+// 
+// 	/*
+// 	 * Only one of these should print at a time.
+// 	 */
+// 	P(testsem);
+// 	semtest_current = num;
+// 
+// 	kprintf_n("Thread %2lu: ", num);
+// 	for (i=0; i<NSEMLOOPS; i++) {
+// 		kprintf_t(".");
+// 		kprintf_n("%2lu", num);
+// 		random_yielder(4);
+// 		failif((semtest_current != num));
+// 	}
+// 	kprintf_n("\n");
+// 
+// 	V(donesem);
+// }
+
 static
 void
-// rwtestthread(void *junk, unsigned long num)
-semtestthread(void *junk, unsigned long num)
+rwtestthread_reader(void *junk, unsigned long num)
 {
-	// copy of semtestthread
 	(void)junk;
 
-	int i;
-
-	random_yielder(4);
-
 	/*
-	 * Only one of these should print at a time.
+	* Ok for other readers to print but not writer
 	 */
-	P(testsem);
-	semtest_current = num;
+	testval1 = num;
 
-	kprintf_n("Thread %2lu: ", num);
-	for (i=0; i<NSEMLOOPS; i++) {
-		kprintf_t(".");
-		kprintf_n("%2lu", num);
-		random_yielder(4);
-		failif((semtest_current != num));
-	}
-	kprintf_n("\n");
+	return;
 
-	V(donesem);
 }
 
 int rwtest(int nargs, char **args) {
@@ -77,51 +102,44 @@ int rwtest(int nargs, char **args) {
 
 	int i, result;
 
-	kprintf_n("Starting sem1...\n");
+	kprintf_n("Starting rwt1...\n");
 	for (i=0; i<CREATELOOPS; i++) {
 		kprintf_t(".");
-		testsem = sem_create("testsem", 2);
-		if (testsem == NULL) {
-			panic("sem1: sem_create failed\n");
+		testlock = rwlock_create("testlock");
+		if (testlock == NULL) {
+			panic("rwt1: rwlock_create failed\n");
 		}
 		donesem = sem_create("donesem", 0);
 		if (donesem == NULL) {
-			panic("sem1: sem_create failed\n");
+			panic("rwt1: sem_create failed\n");
 		}
 		if (i != CREATELOOPS - 1) {
-			sem_destroy(testsem);
+			rwlock_destroy(testlock);
 			sem_destroy(donesem);
 		}
 	}
 	spinlock_init(&status_lock);
 	test_status = TEST161_SUCCESS;
 
-	kprintf_n("If this hangs, it's broken: ");
-	P(testsem);
-	P(testsem);
-	kprintf_n("OK\n");
-	kprintf_t(".");
-
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
-		result = thread_fork("semtest", NULL, semtestthread, NULL, i);
+		result = thread_fork("rwtest", NULL, rwtestthread_reader, NULL, i);
 		if (result) {
-			panic("sem1: thread_fork failed: %s\n",
-			      strerror(result));
+			panic("rwt1: thread_fork failed: %s\n", strerror(result));
 		}
 	}
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
-		V(testsem);
 		P(donesem);
 	}
 
-	sem_destroy(testsem);
+	rwlock_destroy(testlock);
 	sem_destroy(donesem);
-	testsem = donesem = NULL;
+	testlock = NULL;
+	donesem = NULL;
 
 	kprintf_t("\n");
-	success(test_status, SECRET, "sem1");
+	success(test_status, SECRET, "rwt1");
 
 	return 0;
 
