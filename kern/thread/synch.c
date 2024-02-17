@@ -439,6 +439,7 @@ rwlock_acquire_read(struct rwlock *rwlock)
 
 	/* Use the rwlock's spinlock to protect the wchan as well. */
 	spinlock_acquire(&rwlock->rwlock_spinlock);
+	// TODO: do something with deadlock detector? Below from `lock_acquire`
 	// HANGMAN_WAIT(&curthread->t_hangman, &rwlock->lk_hangman);
 	while (rwlock->is_locked_writer) {
 		/*
@@ -451,8 +452,8 @@ rwlock_acquire_read(struct rwlock *rwlock)
 		wchan_sleep(rwlock->rwlock_wchan_reader, &rwlock->rwlock_spinlock);
 	}
 	KASSERT(!(rwlock->is_locked_writer));
-	KASSERT(rwlock->holder_count_reader >= 0);  // TODO: check this
 	rwlock->holder_count_reader += 1;
+	// TODO: do something with deadlock detector? Below from `lock_acquire`
 	// HANGMAN_ACQUIRE(&curthread->t_hangman, &rwlock->lk_hangman);
 	spinlock_release(&rwlock->rwlock_spinlock);
 }
@@ -460,7 +461,6 @@ rwlock_acquire_read(struct rwlock *rwlock)
 void
 rwlock_release_read(struct rwlock *rwlock)
 {
-	// actual implementation
 	KASSERT(rwlock != NULL);
 
 	// TODO: do we need to verify that it's currently read-locked and that
@@ -479,7 +479,36 @@ rwlock_release_read(struct rwlock *rwlock)
 void
 rwlock_acquire_write(struct rwlock *rwlock)
 {
-	(void)rwlock;  // suppress warning until code gets written
+	KASSERT(rwlock != NULL);
+
+	/*
+	 * May not block in an interrupt handler.
+	 *
+	 * For robustness, always check, even if we can actually
+	 * complete without blocking.
+	 */
+	KASSERT(curthread->t_in_interrupt == false);
+
+	/* Use the rwlock's spinlock to protect the wchan as well. */
+	spinlock_acquire(&rwlock->rwlock_spinlock);
+	// TODO: do something with deadlock detector? Below from `lock_acquire`
+	// HANGMAN_WAIT(&curthread->t_hangman, &rwlock->lk_hangman);
+	while (rwlock->holder_count_reader > 0) {
+		/*
+		 *
+		 * Note that we don't maintain strict FIFO ordering of
+		 * threads going through the lock; that is, we
+		 * might "get" it on the first try even if other
+		 * threads are waiting.
+		 */
+		wchan_sleep(rwlock->rwlock_wchan_writer, &rwlock->rwlock_spinlock);
+	}
+	KASSERT(rwlock->holder_count_reader == 0);
+	rwlock->is_locked_writer = true;
+	rwlock->rwlock_holder_writer = curthread;
+	// TODO: do something with deadlock detector? Below from `lock_acquire`
+	// HANGMAN_ACQUIRE(&curthread->t_hangman, &rwlock->lk_hangman);
+	spinlock_release(&rwlock->rwlock_spinlock);
 }
 
 void
