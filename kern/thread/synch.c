@@ -362,3 +362,72 @@ cv_broadcast(struct cv *cv, struct lock *lock)
 	wchan_wakeall(cv->cv_wchan, &cv->cv_spinlock);
 	spinlock_release(&cv->cv_spinlock);
 }
+
+
+/*
+ * Reader writer lock implementation
+ */
+struct rwlock *
+rwlock_create(const char *name)
+{
+	struct rwlock *rwlock;
+
+	rwlock = kmalloc(sizeof(*rwlock));
+	if (rwlock == NULL) {
+		return NULL;
+	}
+
+	rwlock->rwlock_name = kstrdup(name);
+	if (rwlock->rwlock_name == NULL) {
+		kfree(rwlock);
+		return NULL;
+	}
+
+	// TODO: do we need the below, that exists in `lock_create`?
+	// HANGMAN_LOCKABLEINIT(&rwlock->lk_hangman, rwlock->lk_name);
+
+	// TODO: deal with reader-writer-lock-specific stuff
+
+	return rwlock;
+}
+void
+rwlock_destroy(struct rwlock *rwlock)
+{
+	(void)rwlock;  // suppress warning until code gets written
+}
+
+/*
+ * Operations:
+ *    rwlock_acquire_read  - Get the lock for reading. Multiple threads can
+ *                          hold the lock for reading at the same time.
+ *    rwlock_release_read  - Free the lock.
+ *    rwlock_acquire_write - Get the lock for writing. Only one thread can
+ *                           hold the write lock at one time.
+ *    rwlock_release_write - Free the write lock.
+ *
+ * These operations must be atomic. You get to write them.
+ */
+
+void
+rwlock_acquire_read(struct rwlock *rwlock)
+{
+	(void)rwlock;  // suppress warning until code gets written
+}
+
+void
+rwlock_release_read(struct rwlock *rwlock)
+{
+	(void)rwlock;  // suppress warning until code gets written
+}
+
+void
+rwlock_acquire_write(struct rwlock *rwlock)
+{
+	(void)rwlock;  // suppress warning until code gets written
+}
+
+void
+rwlock_release_write(struct rwlock *rwlock)
+{
+	(void)rwlock;  // suppress warning until code gets written
+}
