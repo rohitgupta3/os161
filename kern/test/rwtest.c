@@ -36,6 +36,7 @@ static bool test_status = TEST161_FAIL;
 // int rwtestthread_reader(void *junk, unsigned long num)
 // TODO: figure out whythis error comes up here but not for e.g. `locktestthread`?
 static void rwtestthread_reader(void *junk, unsigned long num);
+static void rwtestthread_writer(void *junk, unsigned long num);
 
 
 static
@@ -87,12 +88,28 @@ rwtestthread_reader(void *junk, unsigned long num)
 	(void)junk;
 
 	/*
-	* Ok for other readers to print but not writer
+	 * Ok for other readers to print but not writer
 	 */
+
 	testval1 = num;
 
 	return;
 
+}
+
+static
+void
+rwtestthread_writer(void *junk, unsigned long num)
+{
+	(void)junk;
+
+	/*
+	 * Readers cannot print
+	 */
+
+	testval1 = num;
+
+	return; 
 }
 
 int rwtest(int nargs, char **args) {
@@ -128,6 +145,7 @@ int rwtest(int nargs, char **args) {
 			panic("rwt1: thread_fork failed: %s\n", strerror(result));
 		}
 	}
+	result = thread_fork("rwtest", NULL, rwtestthread_writer, NULL, NTHREADS);
 	for (i=0; i<NTHREADS; i++) {
 		kprintf_t(".");
 		P(donesem);
