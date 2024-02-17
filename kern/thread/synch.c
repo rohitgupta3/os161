@@ -460,39 +460,20 @@ rwlock_acquire_read(struct rwlock *rwlock)
 void
 rwlock_release_read(struct rwlock *rwlock)
 {
-	(void)rwlock; // TODO: remove
-	// // from `V`
-	// KASSERT(sem != NULL);
+	// actual implementation
+	KASSERT(rwlock != NULL);
 
-	// spinlock_acquire(&sem->sem_lock);
+	// TODO: do we need to verify that it's currently read-locked and that
+	// the curthread holds the lock? E.g. in `lock_acquire`
 
-	// sem->sem_count++;
-	// KASSERT(sem->sem_count > 0);
-	// wchan_wakeone(sem->sem_wchan, &sem->sem_lock);
+	spinlock_acquire(&rwlock->rwlock_spinlock);
 
-	// spinlock_release(&sem->sem_lock);
-	// // end from `V`
+	rwlock->holder_count_reader -= 1;
+	KASSERT(rwlock->holder_count_reader >= 0);  // TODO: necessary?
+	// TODO: do anything with deadlock detector like in `lock_acquire`?
+	wchan_wakeone(rwlock->rwlock_wchan_writer, &rwlock->rwlock_spinlock);
 
-
-	// // from `lock_acquire`
-	// KASSERT(lock != NULL);
-
-	// if (!(lock->is_locked && lock->lock_holder == curthread)) {
-	// 	panic("Only thread holding lock can invoke `lock_release`");
-	// }
-
-	// spinlock_acquire(&lock->lock_spinlock);
-
-	// lock->is_locked = false;
-	// lock->lock_holder = NULL;
-	// HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
-	// wchan_wakeone(lock->lock_wchan, &lock->lock_spinlock);
-
-	// spinlock_release(&lock->lock_spinlock);
-	// // end from `lock_acquire`
-
-	// // actual implementation
-	// KASSERT(rwlock != NULL);
+	spinlock_release(&rwlock->rwlock_spinlock);
 }
 
 void
