@@ -13,8 +13,8 @@
 #include <spinlock.h>
 
 #define CREATELOOPS		8
-#define NLOCKLOOPS    20  // TODO: change back to 120
-#define NTHREADS      8  // TODO: change back to 32
+#define NLOCKLOOPS    120  // TODO: change back to 120
+#define NTHREADS      32  // TODO: change back to 32
 
 static volatile unsigned long testval1;
 
