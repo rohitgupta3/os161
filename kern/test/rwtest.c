@@ -123,11 +123,10 @@ rwtestthread_reader(void *junk, unsigned long num)
 	// TODO: do something akin to `locktestthread`'s test of tracking
 	// ownership properly?
 
-fail:
-	rwlock_release_read(testlock);
-
 	return;
 
+fail:
+	rwlock_release_read(testlock);
 }
 
 static
@@ -171,11 +170,10 @@ rwtestthread_writer(void *junk, unsigned long num)
 	// TODO: do something akin to `locktestthread`'s test of tracking
 	// ownership properly?
 
-fail:
-	rwlock_release_write(testlock);
-
 	return;
 
+fail:
+	rwlock_release_write(testlock);
 }
 
 int rwtest(int nargs, char **args) {
