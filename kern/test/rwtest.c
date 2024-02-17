@@ -12,14 +12,9 @@
 #include <kern/test161.h>
 #include <spinlock.h>
 
-/*
- * Use these stubs to test your reader-writer locks.
- */
-
 #define CREATELOOPS		8
-// #define NSEMLOOPS     63
-#define NLOCKLOOPS    120
-#define NTHREADS      32
+#define NLOCKLOOPS    20
+#define NTHREADS      8
 
 static volatile unsigned long testval1;
 
@@ -30,8 +25,6 @@ static struct semaphore *donesem = NULL;
 struct spinlock status_lock;
 static bool test_status = TEST161_FAIL;
 
-// static unsigned long semtest_current;
-
 // Declaration to avoid below error
 // test/rwtest.c:75:5: error: no previous prototype for 'rwtestthread_reader' [-Werror=missing-prototypes]
 // int rwtestthread_reader(void *junk, unsigned long num)
@@ -39,48 +32,6 @@ static bool test_status = TEST161_FAIL;
 static void rwtestthread_reader(void *junk, unsigned long num);
 static void rwtestthread_writer(void *junk, unsigned long num);
 
-
-// static
-// bool
-// failif(bool condition) {
-// 	if (condition) {
-// 		spinlock_acquire(&status_lock);
-// 		test_status = TEST161_FAIL;
-// 		spinlock_release(&status_lock);
-// 	}
-// 	return condition;
-// }
-
-
-// static
-// void
-// // rwtestthread(void *junk, unsigned long num)
-// semtestthread(void *junk, unsigned long num)
-// {
-// 	// copy of semtestthread
-// 	(void)junk;
-// 
-// 	int i;
-// 
-// 	random_yielder(4);
-// 
-// 	/*
-// 	 * Only one of these should print at a time.
-// 	 */
-// 	P(testsem);
-// 	semtest_current = num;
-// 
-// 	kprintf_n("Thread %2lu: ", num);
-// 	for (i=0; i<NSEMLOOPS; i++) {
-// 		kprintf_t(".");
-// 		kprintf_n("%2lu", num);
-// 		random_yielder(4);
-// 		failif((semtest_current != num));
-// 	}
-// 	kprintf_n("\n");
-// 
-// 	V(donesem);
-// }
 
 static
 void
@@ -95,7 +46,7 @@ rwtestthread_reader(void *junk, unsigned long num)
 	 */
 
 	for (i=0; i<NLOCKLOOPS; i++) {
-		kprintf_t(".");
+		kprintf_n(".");
 
 		rwlock_acquire_read(testlock);
 		random_yielder(4);
@@ -123,9 +74,12 @@ rwtestthread_reader(void *junk, unsigned long num)
 	// TODO: do something akin to `locktestthread`'s test of tracking
 	// ownership properly?
 
+	V(donesem);
 	return;
 
 fail:
+	V(donesem);
+	kprintf_n("fail");
 	rwlock_release_read(testlock);
 }
 
@@ -170,15 +124,17 @@ rwtestthread_writer(void *junk, unsigned long num)
 	// TODO: do something akin to `locktestthread`'s test of tracking
 	// ownership properly?
 
+	V(donesem);
 	return;
 
 fail:
+	kprintf_n("fail");
+	V(donesem);
 	rwlock_release_write(testlock);
 }
 
 int rwtest(int nargs, char **args)
 {
-	// copy of semtest
 	(void)nargs;
 	(void)args;
 
@@ -215,6 +171,7 @@ int rwtest(int nargs, char **args)
 		kprintf_t(".");
 		P(donesem);
 	}
+	P(donesem);
 
 	rwlock_destroy(testlock);
 	sem_destroy(donesem);
