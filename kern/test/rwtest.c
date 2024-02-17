@@ -17,7 +17,8 @@
  */
 
 #define CREATELOOPS		8
-#define NSEMLOOPS     63
+// #define NSEMLOOPS     63
+#define NLOCKLOOPS    120
 #define NTHREADS      32
 
 static volatile unsigned long testval1;
@@ -39,16 +40,16 @@ static void rwtestthread_reader(void *junk, unsigned long num);
 static void rwtestthread_writer(void *junk, unsigned long num);
 
 
-static
-bool
-failif(bool condition) {
-	if (condition) {
-		spinlock_acquire(&status_lock);
-		test_status = TEST161_FAIL;
-		spinlock_release(&status_lock);
-	}
-	return condition;
-}
+// static
+// bool
+// failif(bool condition) {
+// 	if (condition) {
+// 		spinlock_acquire(&status_lock);
+// 		test_status = TEST161_FAIL;
+// 		spinlock_release(&status_lock);
+// 	}
+// 	return condition;
+// }
 
 
 // static
@@ -87,11 +88,43 @@ rwtestthread_reader(void *junk, unsigned long num)
 {
 	(void)junk;
 
+	int i;
+
 	/*
 	 * Ok for other readers to print but not writer
 	 */
 
-	testval1 = num;
+	for (i=0; i<NLOCKLOOPS; i++) {
+		kprintf_t(".");
+
+		rwlock_acquire_read(testlock);
+		random_yielder(4);
+
+		testval1 = num;
+
+		if (testval1 == NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		if (testval1 == NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		if (testval1 == NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		rwlock_release_read(testlock);
+	}
+
+	// TODO: do something akin to `locktestthread`'s test of tracking
+	// ownership properly?
+
+fail:
+	rwlock_release_read(testlock);
 
 	return;
 
@@ -103,13 +136,46 @@ rwtestthread_writer(void *junk, unsigned long num)
 {
 	(void)junk;
 
+	int i;
+
 	/*
 	 * Readers cannot print
 	 */
 
-	testval1 = num;
+	for (i=0; i<NLOCKLOOPS; i++) {
+		kprintf_t(".");
+
+		rwlock_acquire_write(testlock);
+		random_yielder(4);
+
+		testval1 = num;
+
+		if (testval1 < NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		if (testval1 < NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		if (testval1 < NTHREADS) {
+			goto fail;
+		}
+		random_yielder(4);
+
+		rwlock_release_write(testlock);
+	}
+
+	// TODO: do something akin to `locktestthread`'s test of tracking
+	// ownership properly?
+
+fail:
+	rwlock_release_write(testlock);
 
 	return;
+
 }
 
 int rwtest(int nargs, char **args) {
