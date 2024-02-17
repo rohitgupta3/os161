@@ -13,12 +13,11 @@
 #include <spinlock.h>
 
 #define CREATELOOPS		8
-#define NLOCKLOOPS    20
-#define NTHREADS      8
+#define NLOCKLOOPS    20  // TODO: change back to 120
+#define NTHREADS      8  // TODO: change back to 32
 
 static volatile unsigned long testval1;
 
-// static struct semaphore *testsem = NULL;
 static struct rwlock *testlock = NULL;
 static struct semaphore *donesem = NULL;
 
