@@ -387,6 +387,17 @@ rwlock_create(const char *name)
 	// HANGMAN_LOCKABLEINIT(&rwlock->lk_hangman, rwlock->lk_name);
 
 	// TODO: deal with reader-writer-lock-specific stuff
+	rwlock->rwlock_wchan = wchan_create(rwlock->rwlock_name);
+	if (rwlock->rwlock_wchan == NULL) {
+		kfree(rwlock->rwlock_name);
+		kfree(rwlock);
+		return NULL;
+	}
+
+	spinlock_init(&rwlock->rwlock_spinlock);
+	rwlock->holder_count_reader = 0; // TODO: necessary?
+	rwlock->is_locked_writer = false;
+	rwlock->rwlock_holder_writer = NULL; // TODO: feels weird
 
 	return rwlock;
 }

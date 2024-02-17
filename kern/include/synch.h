@@ -154,10 +154,20 @@ void cv_broadcast(struct cv *cv, struct lock *lock);
  * (should be) made internally.
  */
 
+// TODO: do we need to keep track of the readers who hold the lock?
 struct rwlock {
         char *rwlock_name;
         // add what you need here
         // (don't forget to mark things volatile as needed)
+
+        HANGMAN_LOCKABLE(lk_hangman);   /* Deadlock detector hook. */
+        // add what you need here
+        // (don't forget to mark things volatile as needed)
+	struct wchan *rwlock_wchan;
+	struct spinlock rwlock_spinlock;
+	volatile int holder_count_reader;  // TODO: is this type right?
+	volatile bool is_locked_writer;
+	volatile struct thread *rwlock_holder_writer;
 };
 
 struct rwlock * rwlock_create(const char *);
