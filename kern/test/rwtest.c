@@ -300,6 +300,15 @@ int rwtest4(int nargs, char **args)
 	return 0;
 }
 
+// TODO:
+// - Create test (that won't pass) that ensures that a thread can't acquire
+//   a reader lock it already has
+// - Create test that ensures a thread can't release a writer lock it doesn't
+//   have
+// - Create test that ensures a thread can't acquire a writer lock it already
+//   has
+// - Create test that ensures a lock can't be destroyed that is currently held
+
 int rwtest5(int nargs, char **args)
 {
 	(void)nargs;
