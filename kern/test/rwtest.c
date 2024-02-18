@@ -31,7 +31,10 @@ static bool test_status = TEST161_FAIL;
 static void rwtestthread_reader(void *junk, unsigned long num);
 static void rwtestthread_writer(void *junk, unsigned long num);
 
-static void rwtest3_acquire_lock(void *junk, unsigned long num);
+// TODO: why do I not need to uncomment these but needed to have the above
+// declarations?
+// static void rwtest3_acquire_read_lock(void *junk, unsigned long num);
+// static void rwtest3_release_read_lock(void *junk, unsigned long num);
 
 static
 void
@@ -216,7 +219,7 @@ int rwtest2(int nargs, char **args)
 
 static
 void
-rwtest3_acquire_lock(void *junk, unsigned long num)
+rwtest3_acquire_read_lock(void *junk, unsigned long num)
 {
 	(void)junk;
 	(void)num;
@@ -226,7 +229,7 @@ rwtest3_acquire_lock(void *junk, unsigned long num)
 
 static
 void
-rwtest3_release_lock(void *junk, unsigned long num)
+rwtest3_release_read_lock(void *junk, unsigned long num)
 {
 	(void)junk;
 	(void)num;
@@ -234,11 +237,10 @@ rwtest3_release_lock(void *junk, unsigned long num)
 	return;
 }
 
-// This test properly fails (by no panic occurring) because I get around the
-// reader holder count check by having a separate thread increment the count
-// by acquiring it
-// TODO: make this test succeed, by panicking. Need to keep track of threads
-// that hold a reader lock in order to accomplish this
+// Releasing a reader lock when the current thread doesn't hold it => panic
+// Test fails!
+// TODO: make this test succeed. Need to keep track of threads that hold a
+// reader lock in order to accomplish this
 int rwtest3(int nargs, char **args)
 {
 	(void)nargs;
@@ -255,11 +257,11 @@ int rwtest3(int nargs, char **args)
 	}
 
 	secprintf(SECRET, "Should panic...", "rwt3");
-	result = thread_fork("rwtest3", NULL, rwtest3_acquire_lock, NULL, 0);
+	result = thread_fork("rwtest3", NULL, rwtest3_acquire_read_lock, NULL, 0);
 	if (result) {
 		panic("rwt3: thread_fork failed: %s\n", strerror(result));
 	}
-	result = thread_fork("rwtest3", NULL, rwtest3_release_lock, NULL, 1);
+	result = thread_fork("rwtest3", NULL, rwtest3_release_read_lock, NULL, 1);
 	if (result) {
 		panic("rwt3: thread_fork failed: %s\n", strerror(result));
 	}
@@ -274,6 +276,8 @@ int rwtest3(int nargs, char **args)
 	return 0;
 }
 
+// Releasing a writer lock when the current thread doesn't hold it => panic
+// Passes
 int rwtest4(int nargs, char **args)
 {
 	(void)nargs;
@@ -300,6 +304,35 @@ int rwtest4(int nargs, char **args)
 	return 0;
 }
 
+// Destroying a lock when a thread has a reader lock => panic
+// Passes
+int rwtest5(int nargs, char **args)
+{
+	(void)nargs;
+	(void)args;
+
+	kprintf_n("Starting rwt5...\n");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt5: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt5");
+	rwlock_acquire_read(testlock);
+	rwlock_destroy(testlock);
+
+	/* Should not get here on success. */
+
+	success(TEST161_FAIL, SECRET, "rwt5");
+
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
+	return 0;
+}
+
 // TODO:
 // - Create test (that won't pass) that ensures that a thread can't acquire
 //   a reader lock it already has
@@ -308,14 +341,3 @@ int rwtest4(int nargs, char **args)
 // - Create test that ensures a thread can't acquire a writer lock it already
 //   has
 // - Create test that ensures a lock can't be destroyed that is currently held
-
-int rwtest5(int nargs, char **args)
-{
-	(void)nargs;
-	(void)args;
-
-	kprintf_n("rwt5 unimplemented\n");
-	success(TEST161_FAIL, SECRET, "rwt5");
-
-	return 0;
-}
