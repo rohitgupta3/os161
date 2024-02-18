@@ -31,6 +31,7 @@ static bool test_status = TEST161_FAIL;
 static void rwtestthread_reader(void *junk, unsigned long num);
 static void rwtestthread_writer(void *junk, unsigned long num);
 
+static void rwtest3_acquire_lock(void *junk, unsigned long num);
 
 static
 void
@@ -181,15 +182,53 @@ int rwtest(int nargs, char **args)
 	return 0;
 }
 
+// TODO: this is a known failing test. It fails because I don't track
+// which readers hold the lock
+// This actually is working, superficially. It panics because it checks
+// for the holder count to be >=0 after decrementing the holder count
 int rwtest2(int nargs, char **args)
 {
 	(void)nargs;
 	(void)args;
 
-	kprintf_n("rwt2 unimplemented\n");
+	kprintf_n("Starting rwt2...\n");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt2: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt2");
+	rwlock_release_read(testlock);
+
+	/* Should not get here on success. */
+
 	success(TEST161_FAIL, SECRET, "rwt2");
 
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
 	return 0;
+}
+
+
+static
+void
+rwtest3_acquire_lock(void *junk, unsigned long num)
+{
+	(void)junk;
+	(void)num;
+	return;
+}
+
+static
+void
+rwtest3_release_lock(void *junk, unsigned long num)
+{
+	(void)junk;
+	(void)num;
+	return;
 }
 
 int rwtest3(int nargs, char **args)
@@ -197,9 +236,33 @@ int rwtest3(int nargs, char **args)
 	(void)nargs;
 	(void)args;
 
-	kprintf_n("rwt3 unimplemented\n");
+	int result;
+
+	kprintf_n("Starting rwt3...\n");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt3: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt3");
+	result = thread_fork("rwtest3", NULL, rwtest3_acquire_lock, NULL, 0);
+	if (result) {
+		panic("rwt3: thread_fork failed: %s\n", strerror(result));
+	}
+	result = thread_fork("rwtest3", NULL, rwtest3_release_lock, NULL, 1);
+	if (result) {
+		panic("rwt3: thread_fork failed: %s\n", strerror(result));
+	}
+
+	/* Should not get here on success. */
+
 	success(TEST161_FAIL, SECRET, "rwt3");
 
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
 	return 0;
 }
 
@@ -208,9 +271,24 @@ int rwtest4(int nargs, char **args)
 	(void)nargs;
 	(void)args;
 
-	kprintf_n("rwt4 unimplemented\n");
-	success(TEST161_FAIL, SECRET, "rwt4");
+	kprintf_n("Starting rwt3...\n");
+	kprintf_n("(This test panics on success!)\n");
 
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt3: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt3");
+	rwlock_release_write(testlock);
+
+	/* Should not get here on success. */
+
+	success(TEST161_FAIL, SECRET, "rwt3");
+
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
 	return 0;
 }
 
