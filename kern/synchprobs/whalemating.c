@@ -84,6 +84,7 @@ male(uint32_t index)
 			kprintf_n("male %d has the slot\n", index);
 			cv_wait(testcv, testlock);
 			male_end(index);
+			male_thread = NULL;
 			lock_release(testlock);
 			break;
 		}
@@ -110,6 +111,7 @@ female(uint32_t index)
 			kprintf_n("female %d has the slot\n", index);
 			cv_wait(testcv, testlock);
 			female_end(index);
+			female_thread = NULL;
 			lock_release(testlock);
 			break;
 		}
@@ -136,6 +138,7 @@ matchmaker(uint32_t index)
 			kprintf_n("matchmaker %d has the slot\n", index);
 			cv_broadcast(testcv, testlock);
 			matchmaker_end(index);
+			matchmaker_thread = NULL;
 			lock_release(testlock);
 			break;
 		}
