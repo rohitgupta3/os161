@@ -78,8 +78,10 @@ male(uint32_t index)
 	male_start(index);
 	while (1) {
 		lock_acquire(testlock);
+		// kprintf_n("male %d has the lock\n", index);
 		if (male_thread == NULL) {
 			male_thread = curthread;
+			kprintf_n("male %d has the slot\n", index);
 			cv_wait(testcv, testlock);
 			male_end(index);
 			lock_release(testlock);
@@ -87,6 +89,7 @@ male(uint32_t index)
 		}
 		lock_release(testlock);
 	}
+	kprintf_n("male %d is returning\n", index);
 	return;
 }
 
@@ -101,8 +104,10 @@ female(uint32_t index)
 	female_start(index);
 	while (1) {
 		lock_acquire(testlock);
+		// kprintf_n("female %d has the lock\n", index);
 		if (female_thread == NULL) {
 			female_thread = curthread;
+			kprintf_n("female %d has the slot\n", index);
 			cv_wait(testcv, testlock);
 			female_end(index);
 			lock_release(testlock);
@@ -110,6 +115,7 @@ female(uint32_t index)
 		}
 		lock_release(testlock);
 	}
+	kprintf_n("female %d is returning\n", index);
 	return;
 }
 
@@ -124,8 +130,10 @@ matchmaker(uint32_t index)
 	matchmaker_start(index);
 	while (1) {
 		lock_acquire(testlock);
+		// kprintf_n("matchmaker %d has the lock\n", index);
 		if (matchmaker_thread == NULL && female_thread != NULL && male_thread != NULL) {
 			matchmaker_thread = curthread;
+			kprintf_n("matchmaker %d has the slot\n", index);
 			cv_broadcast(testcv, testlock);
 			matchmaker_end(index);
 			lock_release(testlock);
@@ -133,5 +141,6 @@ matchmaker(uint32_t index)
 		}
 		lock_release(testlock);
 	}
+	kprintf_n("matchmaker %d is returning\n", index);
 	return;
 }
