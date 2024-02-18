@@ -182,10 +182,11 @@ int rwtest(int nargs, char **args)
 	return 0;
 }
 
-// TODO: this is a known failing test. It fails because I don't track
-// which readers hold the lock
-// This actually is working, superficially. It panics because it checks
-// for the holder count to be >=0 after decrementing the holder count
+// This test should demonstrate that a thread cannot release a reader lock it
+// doesn't hold, and the panic demonstrates that. While this test *does* panic,
+// it does so for an unrelated reason, namely because it checks for the reader 
+// holder count to be >=0 after decrementing. So this is a misleading "success"
+// (via panic, so even more confusing)
 int rwtest2(int nargs, char **args)
 {
 	(void)nargs;
@@ -219,6 +220,7 @@ rwtest3_acquire_lock(void *junk, unsigned long num)
 {
 	(void)junk;
 	(void)num;
+	rwlock_acquire_read(testlock);
 	return;
 }
 
@@ -228,9 +230,15 @@ rwtest3_release_lock(void *junk, unsigned long num)
 {
 	(void)junk;
 	(void)num;
+	rwlock_release_read(testlock);
 	return;
 }
 
+// This test properly fails (by no panic occurring) because I get around the
+// reader holder count check by having a separate thread increment the count
+// by acquiring it
+// TODO: make this test succeed, by panicking. Need to keep track of threads
+// that hold a reader lock in order to accomplish this
 int rwtest3(int nargs, char **args)
 {
 	(void)nargs;
