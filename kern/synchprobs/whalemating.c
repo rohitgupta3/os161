@@ -39,12 +39,22 @@
 #include <thread.h>
 #include <test.h>
 #include <synch.h>
+// adding below to get access to `curthread`
+#include <current.h>
 
 /*
  * Called by the driver during initialization.
  */
 
+static struct lock *testlock = NULL;
+static volatile struct thread *male_thread = NULL;
+static volatile struct thread *female_thread = NULL;
+static volatile struct thread *matchmaker_thread = NULL;
+static struct cv *testcv = NULL;
+
 void whalemating_init() {
+	testlock = lock_create("testlock");
+	testcv = cv_create("testcv");
 	return;
 }
 
@@ -66,7 +76,17 @@ male(uint32_t index)
 	 * appropriate.
 	 */
 	male_start(index);
-	// male_end(index);
+	while (1) {
+		lock_acquire(testlock);
+		if (male_thread == NULL) {
+			male_thread = curthread;
+			cv_wait(testcv, testlock);
+			male_end(index);
+			lock_release(testlock);
+			break;
+		}
+		lock_release(testlock);
+	}
 	return;
 }
 
@@ -79,7 +99,17 @@ female(uint32_t index)
 	 * appropriate.
 	 */
 	female_start(index);
-	// female_end(index);
+	while (1) {
+		lock_acquire(testlock);
+		if (female_thread == NULL) {
+			female_thread = curthread;
+			cv_wait(testcv, testlock);
+			female_end(index);
+			lock_release(testlock);
+			break;
+		}
+		lock_release(testlock);
+	}
 	return;
 }
 
@@ -92,6 +122,16 @@ matchmaker(uint32_t index)
 	 * when appropriate.
 	 */
 	matchmaker_start(index);
-	// matchmaker_end(index);
+	while (1) {
+		lock_acquire(testlock);
+		if (matchmaker_thread == NULL && female_thread != NULL && male_thread != NULL) {
+			matchmaker_thread = curthread;
+			cv_broadcast(testcv, testlock);
+			matchmaker_end(index);
+			lock_release(testlock);
+			break;
+		}
+		lock_release(testlock);
+	}
 	return;
 }
