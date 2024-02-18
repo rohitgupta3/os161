@@ -504,6 +504,10 @@ rwlock_acquire_write(struct rwlock *rwlock)
 	 */
 	KASSERT(curthread->t_in_interrupt == false);
 
+	if (rwlock->rwlock_holder_writer == curthread) {
+		panic("Current thread already holds writer lock in `rwlock_acquire_write`");
+	}
+
 	/* Use the rwlock's spinlock to protect the wchan as well. */
 	spinlock_acquire(&rwlock->rwlock_spinlock);
 	// TODO: do something with deadlock detector? Below from `lock_acquire`
