@@ -333,6 +333,16 @@ int rwtest5(int nargs, char **args)
 	return 0;
 }
 
+int rwtest6(int nargs, char **args)
+{
+	(void)nargs;
+	(void)args;
+
+	kprintf_n("Starting rwt6...\n");
+	success(TEST161_SUCCESS, SECRET, "rwt6");
+	return 0;
+}
+
 // TODO:
 // - Create test (that won't pass) that ensures that a thread can't acquire
 //   a reader lock it already has
