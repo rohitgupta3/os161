@@ -65,6 +65,8 @@ male(uint32_t index)
 	 * Implement this function by calling male_start and male_end when
 	 * appropriate.
 	 */
+	male_start(index);
+	// male_end(index);
 	return;
 }
 
@@ -76,6 +78,8 @@ female(uint32_t index)
 	 * Implement this function by calling female_start and female_end when
 	 * appropriate.
 	 */
+	female_start(index);
+	// female_end(index);
 	return;
 }
 
@@ -87,5 +91,7 @@ matchmaker(uint32_t index)
 	 * Implement this function by calling matchmaker_start and matchmaker_end
 	 * when appropriate.
 	 */
+	matchmaker_start(index);
+	// matchmaker_end(index);
 	return;
 }

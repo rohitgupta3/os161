@@ -307,10 +307,11 @@ whalemating(int nargs, char **args) {
 		P(startsem);
 	}
 
+	kprintf_n("After starting, before");	
 	/* Make sure nothing is happening... */
 	loop_status = TEST161_SUCCESS;
 	for (i = 0; i < CHECK_TIMES && loop_status == TEST161_SUCCESS; i++) {
-		kprintf_t(".");
+		kprintf_n(".");
 		random_spinner(PROBLEMS_MAX_SPINNER);
 		lock_acquire(testlock);
 		if ((male_start_count != NMATING) || (female_start_count != NMATING) ||
@@ -323,9 +324,10 @@ whalemating(int nargs, char **args) {
 		goto done;
 	}
 
+	kprintf_n("Before matchmaker creation");
 	/* Create the matchmakers */
 	for (j = 0; j < NMATING; j++) {
-		kprintf_t(".");
+		kprintf_n(".");
 		int index = (2 * NMATING) + j;
 		whale_threads[index] = NULL;
 		snprintf(name, sizeof(name), "Matchmaker Whale Thread %d", index);
@@ -341,6 +343,7 @@ whalemating(int nargs, char **args) {
 	 * matches to finish.
 	 */
 	int pivot = (random() % (NMATING - 2)) + 1;
+	kprintf_n("pivot is %d\n", pivot);
 	for (i = 0; i < pivot; i++) {
 		kprintf_t(".");
 		V(matcher_sem);
