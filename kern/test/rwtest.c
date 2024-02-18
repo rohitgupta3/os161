@@ -333,13 +333,32 @@ int rwtest5(int nargs, char **args)
 	return 0;
 }
 
+// Destroying a lock when a thread has a writer lock => panic
+// Passes
 int rwtest6(int nargs, char **args)
 {
 	(void)nargs;
 	(void)args;
 
 	kprintf_n("Starting rwt6...\n");
-	success(TEST161_SUCCESS, SECRET, "rwt6");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt6: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt6");
+	rwlock_acquire_write(testlock);
+	rwlock_destroy(testlock);
+
+	/* Should not get here on success. */
+
+	success(TEST161_FAIL, SECRET, "rwt6");
+
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
 	return 0;
 }
 
