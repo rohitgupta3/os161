@@ -409,7 +409,22 @@ rwlock_create(const char *name)
 void
 rwlock_destroy(struct rwlock *rwlock)
 {
-	(void)rwlock;  // suppress warning until code gets written
+	KASSERT(rwlock != NULL);
+	if ((rwlock->holder_count_reader != 0) ||
+		(rwlock->rwlock_holder_writer != NULL)) {
+		panic("Nothing should be holding rwlock in `rwlock_destroy`");
+	}
+
+	/* wchan_cleanup will assert if anyone's waiting on it */
+	spinlock_cleanup(&rwlock->rwlock_spinlock);
+	wchan_destroy(rwlock->rwlock_wchan_reader);
+	wchan_destroy(rwlock->rwlock_wchan_writer);
+	// TODO: feels weird, plus shouldn't it already be NULL?
+	// Just copied this from `lock_destroy`
+	rwlock->rwlock_holder_writer = NULL; 
+
+	kfree(rwlock->rwlock_name);
+	kfree(rwlock);
 }
 
 /*
