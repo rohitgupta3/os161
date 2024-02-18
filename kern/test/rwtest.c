@@ -362,11 +362,69 @@ int rwtest6(int nargs, char **args)
 	return 0;
 }
 
+// Acquiring a reader lock when one already has it => panic
+// Test fails!
+// TODO: make this test succeed. Need to keep track of threads that hold a
+// reader lock in order to accomplish this
+int rwtest7(int nargs, char **args)
+{
+	(void)nargs;
+	(void)args;
+
+	kprintf_n("Starting rwt7...\n");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt7: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt7");
+	rwlock_acquire_read(testlock);
+	rwlock_acquire_read(testlock);
+
+	/* Should not get here on success. */
+
+	success(TEST161_FAIL, SECRET, "rwt7");
+
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
+	return 0;
+}
+
+// Acquiring a writer lock when one already has it => panic
+// Test fails!
+// TODO: fix. This I can do relatively quickly / easily I think
+int rwtest8(int nargs, char **args)
+{
+	(void)nargs;
+	(void)args;
+
+	kprintf_n("Starting rwt8...\n");
+	kprintf_n("(This test panics on success!)\n");
+
+	testlock = rwlock_create("testlock");
+	if (testlock == NULL) {
+		panic("rwt8: rwlock_create failed\n");
+	}
+
+	secprintf(SECRET, "Should panic...", "rwt8");
+	rwlock_acquire_write(testlock);
+	rwlock_acquire_write(testlock);
+
+	/* Should not get here on success. */
+
+	success(TEST161_FAIL, SECRET, "rwt8");
+
+	/* Don't do anything that could panic. */
+
+	testlock = NULL;
+	return 0;
+}
+
 // TODO:
-// - Create test (that won't pass) that ensures that a thread can't acquire
-//   a reader lock it already has
 // - Create test that ensures a thread can't release a writer lock it doesn't
 //   have
 // - Create test that ensures a thread can't acquire a writer lock it already
 //   has
-// - Create test that ensures a lock can't be destroyed that is currently held

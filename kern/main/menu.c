@@ -758,6 +758,8 @@ static struct {
 	{ "rwt4",	rwtest4 },
 	{ "rwt5",	rwtest5 },
 	{ "rwt6",	rwtest6 },
+	{ "rwt7",	rwtest7 },
+	{ "rwt8",	rwtest8 },
 #if OPT_SYNCHPROBS
 	{ "sp1",	whalemating },
 	{ "sp2",	stoplight },
