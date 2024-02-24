@@ -528,6 +528,13 @@ turnleft_wrapper(void *index, unsigned long direction)
 	return;
 }
 
+// Seems to change:
+// - `quadrant_array` (how many cars in each quadrant), once via the call to
+//     `move` and once within this function
+// - `car_locations`
+// And does a lot of checks around whether the car in question, i.e. car with
+// index = `index`, is "allowed" to call `inQuadrant` with the particular
+// `quadrant`
 void
 inQuadrant(int quadrant, uint32_t index) {
 	random_yielder(PROBLEMS_MAX_YIELDER);

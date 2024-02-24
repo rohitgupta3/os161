@@ -69,6 +69,8 @@
 #include <test.h>
 #include <synch.h>
 
+int gostraight_quadrant(uint32_t direction, uint32_t turn_number);
+
 /*
  * Called by the driver during initialization.
  */
@@ -96,32 +98,29 @@ turnright(uint32_t direction, uint32_t index)
 	 */
 	return;
 }
+
+int
+gostraight_quadrant(uint32_t direction, uint32_t turn_number)
+{
+	if (turn_number == 1) {
+		return direction;
+	}
+	else {
+		return (direction + 3) % 4;
+	}
+}
 void
 gostraight(uint32_t direction, uint32_t index)
 {
-	// (void)direction;
-	(void)index;
+	int quadrant1, quadrant2;
 
-	if (direction == 1) {
-		inQuadrant(1, index);
-		inQuadrant(0, index);
-		leaveIntersection(index);
-	}
-	else if (direction == 2) {
-		inQuadrant(2, index);
-		inQuadrant(1, index);
-		leaveIntersection(index);
-	}
-	else if (direction == 3) {
-		inQuadrant(3, index);
-		inQuadrant(2, index);
-		leaveIntersection(index);
-	}
-	else {
-		inQuadrant(0, index);
-		inQuadrant(3, index);
-		leaveIntersection(index);
-	}
+	quadrant1 = gostraight_quadrant(direction, 1);
+	quadrant2 = gostraight_quadrant(direction, 2);
+
+	inQuadrant(quadrant1, index);
+	inQuadrant(quadrant2, index);
+	leaveIntersection(index);
+
 	return;
 }
 void
