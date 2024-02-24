@@ -99,11 +99,29 @@ turnright(uint32_t direction, uint32_t index)
 void
 gostraight(uint32_t direction, uint32_t index)
 {
-	(void)direction;
+	// (void)direction;
 	(void)index;
-	/*
-	 * Implement this function.
-	 */
+
+	if (direction == 1) {
+		inQuadrant(1);
+		inQuadrant(0);
+		leaveintersection();
+	}
+	else if (direction == 2) {
+		inQuadrant(2);
+		inQuadrant(1);
+		leaveIntersection();
+	}
+	else if (direction == 3) {
+		inQuadrant(3);
+		inQuadrant(2);
+		leaveIntersection();
+	}
+	else {
+		inQuadrant(0);
+		inQuadrant(3);
+		leaveIntersection();
+	}
 	return;
 }
 void
