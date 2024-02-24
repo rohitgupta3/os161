@@ -449,7 +449,7 @@ check_intersection() {
 	for (int i = 0; i < NUM_QUADRANTS; i++) {
 		failure = (quadrant_array[i] > 1);
 		if (failure) {
-			kprintf_n("%d in quadrant_array[%d]\n", quadrant_array[i], i);
+			kprintf_n("CI: %d in quadrant_array[%d]\n", quadrant_array[i], i);
 		}
 		failif((quadrant_array[i] > 1), "failed: collision");
 		n += quadrant_array[i];
@@ -571,7 +571,7 @@ inQuadrant(int quadrant, uint32_t index) {
 
 	failure = (quadrant_array[quadrant] > 0);
 	if (failure) {
-		kprintf_n("%d in quadrant_array[%d]\n", quadrant_array[quadrant], quadrant);
+		kprintf_n("IQ: %d in quadrant_array[%d]\n", quadrant_array[quadrant], quadrant);
 		failif(1 == 1, "failed: collision");
 	}
 	failif((quadrant_array[quadrant] > 0), "failed: collision");
