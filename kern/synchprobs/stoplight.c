@@ -70,6 +70,7 @@
 #include <synch.h>
 
 int gostraight_quadrant(uint32_t direction, uint32_t turn_number);
+int turnleft_quadrant(uint32_t direction, uint32_t turn_number);
 
 /*
  * Called by the driver during initialization.
@@ -88,14 +89,12 @@ void stoplight_cleanup() {
 	return;
 }
 
+
 void
 turnright(uint32_t direction, uint32_t index)
 {
-	(void)direction;
-	(void)index;
-	/*
-	 * Implement this function.
-	 */
+	inQuadrant(direction, index);
+	leaveIntersection(index);
 	return;
 }
 
@@ -105,8 +104,11 @@ gostraight_quadrant(uint32_t direction, uint32_t turn_number)
 	if (turn_number == 1) {
 		return direction;
 	}
-	else {
+	else if (turn_number == 2) {
 		return (direction + 3) % 4;
+	}
+	else {
+		return -1;
 	}
 }
 void
@@ -123,13 +125,40 @@ gostraight(uint32_t direction, uint32_t index)
 
 	return;
 }
+// 1: 1, 0, 3
+// 2: 2, 1, 0
+// 3: 3, 2, 1
+// 0: 0, 3, 2
+
+int
+turnleft_quadrant(uint32_t direction, uint32_t turn_number)
+{
+	if (turn_number == 1) {
+		return direction;
+	}
+	else if (turn_number == 2) {
+		return (direction + 3) % 4;
+	}
+	else if (turn_number == 3) {
+		return (direction + 2) % 4;
+	}
+	else {
+		return -1;
+	}
+}
 void
 turnleft(uint32_t direction, uint32_t index)
 {
-	(void)direction;
-	(void)index;
-	/*
-	 * Implement this function.
-	 */
+	int quadrant1, quadrant2, quadrant3;
+
+	quadrant1 = turnleft_quadrant(direction, 1);
+	quadrant2 = turnleft_quadrant(direction, 2);
+	quadrant3 = turnleft_quadrant(direction, 3);
+
+	inQuadrant(quadrant1, index);
+	inQuadrant(quadrant2, index);
+	inQuadrant(quadrant3, index);
+	leaveIntersection(index);
+
 	return;
 }
