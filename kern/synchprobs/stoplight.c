@@ -72,12 +72,15 @@
 int gostraight_quadrant(uint32_t direction, uint32_t turn_number);
 int turnleft_quadrant(uint32_t direction, uint32_t turn_number);
 
+static struct rwlock *intersection_lock;
+
 /*
  * Called by the driver during initialization.
  */
 
 void
 stoplight_init() {
+	intersection_lock = rwlock_create("intersection");
 	return;
 }
 
@@ -86,6 +89,7 @@ stoplight_init() {
  */
 
 void stoplight_cleanup() {
+	rwlock_destroy(intersection_lock);
 	return;
 }
 
@@ -93,8 +97,10 @@ void stoplight_cleanup() {
 void
 turnright(uint32_t direction, uint32_t index)
 {
+	rwlock_acquire_read(intersection_lock);
 	inQuadrant(direction, index);
 	leaveIntersection(index);
+	rwlock_release_read(intersection_lock);
 	return;
 }
 
@@ -119,9 +125,11 @@ gostraight(uint32_t direction, uint32_t index)
 	quadrant1 = gostraight_quadrant(direction, 1);
 	quadrant2 = gostraight_quadrant(direction, 2);
 
+	rwlock_acquire_write(intersection_lock);
 	inQuadrant(quadrant1, index);
 	inQuadrant(quadrant2, index);
 	leaveIntersection(index);
+	rwlock_release_write(intersection_lock);
 
 	return;
 }
@@ -155,10 +163,12 @@ turnleft(uint32_t direction, uint32_t index)
 	quadrant2 = turnleft_quadrant(direction, 2);
 	quadrant3 = turnleft_quadrant(direction, 3);
 
+	rwlock_acquire_write(intersection_lock);
 	inQuadrant(quadrant1, index);
 	inQuadrant(quadrant2, index);
 	inQuadrant(quadrant3, index);
 	leaveIntersection(index);
+	rwlock_release_write(intersection_lock);
 
 	return;
 }
