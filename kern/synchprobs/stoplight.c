@@ -107,7 +107,7 @@ turnright(uint32_t direction, uint32_t index)
 	// kprintf_n("Right-turning car %lu coming from direction %lu to release read lock",
 	// 	(unsigned long)index, (unsigned long)direction);
 	rwlock_release_read(intersection_lock);
-	kprintf_n("Right-turning car %lu coming from direction %lu released read lock",
+	kprintf_n("Right-turning car %lu coming from direction %lu released read lock\n",
 		(unsigned long)index, (unsigned long)direction);
 	return;
 }
