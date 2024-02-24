@@ -97,10 +97,16 @@ void stoplight_cleanup() {
 void
 turnright(uint32_t direction, uint32_t index)
 {
+	kprintf_t("Right-turning car %lu", (long unsigned)index);
+	// kprintf_n("Right-turning car %lu coming from direction %lu to acquire read lock", index, direction);
 	rwlock_acquire_read(intersection_lock);
+	// kprintf_n("Right-turning car %lu coming from direction %lu has a read lock", index, direction);
+	// kprintf_n("Right-turning car %" PRIu32, index);
 	inQuadrant(direction, index);
 	leaveIntersection(index);
+	// kprintf_n("Right-turning car %lu coming from direction %lu to release read lock", index, direction);
 	rwlock_release_read(intersection_lock);
+	// kprintf_n("Right-turning car %lu coming from direction %lu released read lock", index, direction);
 	return;
 }
 
