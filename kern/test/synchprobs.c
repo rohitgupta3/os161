@@ -444,13 +444,8 @@ initialize_car_thread(uint32_t index, uint32_t direction, uint32_t turn) {
 static
 void
 check_intersection() {
-	bool failure;
 	int n = 0;
 	for (int i = 0; i < NUM_QUADRANTS; i++) {
-		failure = (quadrant_array[i] > 1);
-		if (failure) {
-			kprintf_n("CI: %d in quadrant_array[%d]\n", quadrant_array[i], i);
-		}
 		failif((quadrant_array[i] > 1), "failed: collision");
 		n += quadrant_array[i];
 	}
@@ -542,7 +537,7 @@ turnleft_wrapper(void *index, unsigned long direction)
 // `quadrant`
 void
 inQuadrant(int quadrant, uint32_t index) {
-	bool failure;
+	// bool failure;
 	random_yielder(PROBLEMS_MAX_YIELDER);
 	random_spinner(PROBLEMS_MAX_SPINNER);
 	lock_acquire(testlock);
@@ -570,12 +565,6 @@ inQuadrant(int quadrant, uint32_t index) {
 	failif((quadrant != target_quadrant), "failed: invalid turn");
 	car_turn_times[index]++;
 
-	failure = (quadrant_array[quadrant] > 0);
-	if (failure) {
-		kprintf_n("IQ: %d cars in quadrant_array[%d], car %d will have problem\n",
-			quadrant_array[quadrant], quadrant, (int)index);
-		failif(1 == 1, "failed: collision");
-	}
 	failif((quadrant_array[quadrant] > 0), "failed: collision");
 
 	quadrant_array[quadrant]++;
