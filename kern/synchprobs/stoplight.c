@@ -82,7 +82,9 @@ static struct lock *rightlocks[4];
 void
 stoplight_init() {
 	int i;
+
 	intersection_lock = rwlock_create("intersection");
+
 	for (i = 0; i < 4; i ++) {
 		rightlocks[i] = lock_create("rightlock");
 	}
