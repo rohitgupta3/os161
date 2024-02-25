@@ -73,6 +73,7 @@ int gostraight_quadrant(uint32_t direction, uint32_t turn_number);
 int turnleft_quadrant(uint32_t direction, uint32_t turn_number);
 
 static struct rwlock *intersection_lock;
+static struct lock *rightlocks[4];
 
 /*
  * Called by the driver during initialization.
@@ -80,7 +81,11 @@ static struct rwlock *intersection_lock;
 
 void
 stoplight_init() {
+	int i;
 	intersection_lock = rwlock_create("intersection");
+	for (i = 0; i < 4; i ++) {
+		rightlocks[i] = lock_create("rightlock");
+	}
 	return;
 }
 
@@ -89,7 +94,13 @@ stoplight_init() {
  */
 
 void stoplight_cleanup() {
+	int i;
+
 	rwlock_destroy(intersection_lock);
+
+	for (i = 0; i < 4; i++) {
+		lock_destroy(rightlocks[i]);
+	}
 	return;
 }
 
@@ -100,12 +111,14 @@ turnright(uint32_t direction, uint32_t index)
 	// kprintf_n("Right-turning car %lu coming from direction %lu to acquire read lock\n",
 	// 	(unsigned long)index, (unsigned long)direction);
 	rwlock_acquire_read(intersection_lock);
+	lock_acquire(rightlocks[direction]);
 	kprintf_n("Right-turning car %lu coming from direction %lu has a read lock\n",
 		(unsigned long)index, (unsigned long)direction);
 	inQuadrant(direction, index);
 	leaveIntersection(index);
 	// kprintf_n("Right-turning car %lu coming from direction %lu to release read lock",
 	// 	(unsigned long)index, (unsigned long)direction);
+	lock_release(rightlocks[direction]);
 	rwlock_release_read(intersection_lock);
 	kprintf_n("Right-turning car %lu coming from direction %lu released read lock\n",
 		(unsigned long)index, (unsigned long)direction);
