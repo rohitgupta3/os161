@@ -512,7 +512,7 @@ rwlock_acquire_write(struct rwlock *rwlock)
 	spinlock_acquire(&rwlock->rwlock_spinlock);
 	// TODO: do something with deadlock detector? Below from `lock_acquire`
 	// HANGMAN_WAIT(&curthread->t_hangman, &rwlock->lk_hangman);
-	while (rwlock->holder_count_reader > 0) {
+	while (rwlock->holder_count_reader > 0 || rwlock->is_locked_writer) {
 		/*
 		 *
 		 * Note that we don't maintain strict FIFO ordering of
@@ -522,7 +522,7 @@ rwlock_acquire_write(struct rwlock *rwlock)
 		 */
 		wchan_sleep(rwlock->rwlock_wchan_writer, &rwlock->rwlock_spinlock);
 	}
-	KASSERT(rwlock->holder_count_reader == 0);
+	KASSERT(rwlock->holder_count_reader == 0 && !(rwlock->is_locked_writer));
 	rwlock->is_locked_writer = true;
 	rwlock->rwlock_holder_writer = curthread;
 	// TODO: do something with deadlock detector? Below from `lock_acquire`
