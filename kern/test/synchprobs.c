@@ -546,6 +546,7 @@ inQuadrant(int quadrant, uint32_t index) {
 	random_yielder(PROBLEMS_MAX_YIELDER);
 	random_spinner(PROBLEMS_MAX_SPINNER);
 	lock_acquire(testlock);
+	kprintf_n("Car %d in `inQuadrant` critical section\n", (int)index);
 	int pre_quadrant = move(index);
 
 	int target_quadrant = car_directions[index];
@@ -571,7 +572,8 @@ inQuadrant(int quadrant, uint32_t index) {
 
 	failure = (quadrant_array[quadrant] > 0);
 	if (failure) {
-		kprintf_n("IQ: %d in quadrant_array[%d]\n", quadrant_array[quadrant], quadrant);
+		kprintf_n("IQ: %d cars in quadrant_array[%d], car %d will have problem\n",
+			quadrant_array[quadrant], quadrant, (int)index);
 		failif(1 == 1, "failed: collision");
 	}
 	failif((quadrant_array[quadrant] > 0), "failed: collision");
