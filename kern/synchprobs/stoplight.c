@@ -110,16 +110,12 @@ void stoplight_cleanup() {
 void
 turnright(uint32_t direction, uint32_t index)
 {
-	// kprintf_n("Right-turning car %lu coming from direction %lu to acquire read lock\n",
-	// 	(unsigned long)index, (unsigned long)direction);
 	rwlock_acquire_read(intersection_lock);
 	lock_acquire(rightlocks[direction]);
 	kprintf_n("Right-turning car %lu coming from direction %lu has a read lock\n",
 		(unsigned long)index, (unsigned long)direction);
 	inQuadrant(direction, index);
 	leaveIntersection(index);
-	// kprintf_n("Right-turning car %lu coming from direction %lu to release read lock",
-	// 	(unsigned long)index, (unsigned long)direction);
 	lock_release(rightlocks[direction]);
 	rwlock_release_read(intersection_lock);
 	kprintf_n("Right-turning car %lu coming from direction %lu released read lock\n",
@@ -148,8 +144,6 @@ gostraight(uint32_t direction, uint32_t index)
 	quadrant1 = gostraight_quadrant(direction, 1);
 	quadrant2 = gostraight_quadrant(direction, 2);
 
-	// kprintf_n("Straight-going car %lu coming from direction %lu to acquire write lock\n",
-	// 	(unsigned long)index, (unsigned long)direction);
 	rwlock_acquire_write(intersection_lock);
 	kprintf_n("Straight-going car %lu coming from direction %lu has write lock\n",
 		(unsigned long)index, (unsigned long)direction);
@@ -192,8 +186,6 @@ turnleft(uint32_t direction, uint32_t index)
 	quadrant2 = turnleft_quadrant(direction, 2);
 	quadrant3 = turnleft_quadrant(direction, 3);
 
-	// kprintf_n("Left-turning car %lu coming from direction %lu to acquire write lock\n",
-	// 	(unsigned long)index, (unsigned long)direction);
 	rwlock_acquire_write(intersection_lock);
 	kprintf_n("Left-turning car %lu coming from direction %lu has write lock\n",
 		(unsigned long)index, (unsigned long)direction);
