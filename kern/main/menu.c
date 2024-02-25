@@ -605,6 +605,9 @@ static const char *testmenu[] = {
 	"[rwt3] RW lock test 3        (1?)   ",
 	"[rwt4] RW lock test 4        (1?)   ",
 	"[rwt5] RW lock test 5        (1?)   ",
+	"[rwt6] RW lock test 6        (1?)   ",
+	"[rwt7] RW lock test 7        (1?)   ",
+	"[rwt8] RW lock test 8        (1?)   ",
 #if OPT_SYNCHPROBS
 	"[sp1] Whalemating test       (1)    ",
 	"[sp2] Stoplight test         (1)    ",
