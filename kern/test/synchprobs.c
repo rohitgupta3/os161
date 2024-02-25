@@ -541,7 +541,6 @@ inQuadrant(int quadrant, uint32_t index) {
 	random_yielder(PROBLEMS_MAX_YIELDER);
 	random_spinner(PROBLEMS_MAX_SPINNER);
 	lock_acquire(testlock);
-	kprintf_n("Car %d in `inQuadrant` critical section\n", (int)index);
 	int pre_quadrant = move(index);
 
 	int target_quadrant = car_directions[index];
