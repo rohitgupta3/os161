@@ -134,6 +134,8 @@ fail:
 	rwlock_release_write(testlock);
 }
 
+// TODO: this does not check whether multiple writers are acquiring the lock. This
+// should be easy to add to the test but must be done.
 int rwtest(int nargs, char **args)
 {
 	(void)nargs;
