@@ -58,5 +58,11 @@ __DEAD void enter_new_process(int argc, userptr_t argv, userptr_t env,
 
 int sys_reboot(int code);
 int sys___time(userptr_t user_seconds, userptr_t user_nanoseconds);
+/*
+ * Below signature is from man page
+ * TODO: do I need to do anything to coordinate how this works versus
+ * userland/include/unistd.h?
+ */
+ssize_t sys_write(int fd, const void *buf, size_t buflen);
 
 #endif /* _SYSCALL_H_ */
